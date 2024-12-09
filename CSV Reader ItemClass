@@ -1,0 +1,118 @@
+//How to import this C# script into Unity:
+//Create a new script and name it "Item" (it cannot be named anything else)
+//Delete everything in the script (it should be blank after deleting)
+//Copy-paste the script below into the C# script in Unity
+//Any other help pls DM me
+// DO NOT COPY ANYTHING ABOVE THIS MESSAGE
+using UnityEngine;
+using System.IO;
+using System.Collections.Generic;
+
+public class Item : MonoBehaviour
+{
+    public GameObject sphere;
+    [System.Serializable]
+    public class SpaceData
+    {
+        public float ElapsedTime; // Time that has passed
+        public float Rx;           // Position in X-axis (km)
+        public float Ry;           // Position in Y-axis (km)
+        public float Rz;           // Position in Z-axis (km)
+        public float Vx;           // Velocity in X-direction (km/s)
+        public float Vy;           // Velocity in Y-direction (km/s)
+        public float Vz;           // Velocity in Z-direction (km/s)
+        public float Mass;         // Mass of the object (kg)
+    }
+
+    // List to store all the data from the CSV file
+    public List<SpaceData> spaceDataList;
+
+    void Start()
+    {
+        // Start reading the CSV data when the scene starts
+        ReadCSV();
+    }
+
+    void ReadCSV()
+    {
+        // Define the path to your CSV file
+        string path = "Assets/Resources/THE REAL UPDATED FILES - Sheet1.csv";
+
+        // Check if the file exists at the given path
+        if (File.Exists(path))
+        {
+            // Read all lines from the CSV file
+            string[] allLines = File.ReadAllLines(path);
+
+            // Inform the user how many records were found
+            Debug.Log($"Found {allLines.Length - 1} data records in the CSV file (skipping header).");
+
+            // Loop through each line, starting from the second line (to skip the header)
+            for (int i = 1; i < allLines.Length; i++)
+            {
+                // Get the current line of CSV data
+                string line = allLines[i];
+
+                // Split the line by commas to separate each value
+                string[] values = line.Split(',');
+
+                // Ensure that we have the correct number of values in the line
+                if (values.Length == 8)
+                {
+                    // Create a new SpaceData object for each line
+                    SpaceData data = new SpaceData
+                    {
+                        ElapsedTime = float.Parse(values[0]), // Elapsed time (in seconds)
+                        Rx = float.Parse(values[1]),           // X position (in kilometers)
+                        Ry = float.Parse(values[2]),           // Y position (in kilometers)
+                        Rz = float.Parse(values[3]),           // Z position (in kilometers)
+                        Vx = float.Parse(values[4]),           // X velocity (in km/s)
+                        Vy = float.Parse(values[5]),           // Y velocity (in km/s)
+                        Vz = float.Parse(values[6]),           // Z velocity (in km/s)
+                        Mass = float.Parse(values[7])          // Mass (in kilograms)
+                    };
+
+                    // Add the data to the list
+                    spaceDataList.Add(data);
+                }
+                else
+                {
+                    // Log an error if the line doesn't have the expected number of columns
+                    Debug.LogWarning($"Line {i + 1} is malformed: Expected 8 values, but found {values.Length}.");
+                }
+            }
+
+            // Print out the data to the Unity Console in a human-readable format
+            PrintDataToConsole();
+        }
+        else
+        {
+            // If the file doesn't exist, log an error
+            Debug.LogError("CSV file not found. Please check the file path.");
+        }
+    }
+
+    void PrintDataToConsole()
+    {
+        // Check if we have data to display
+        if (spaceDataList.Count > 0)
+        {
+            Debug.Log("Data from CSV file:");
+
+            // Loop through each SpaceData object and print it to the console
+            foreach (var data in spaceDataList)
+            {
+                Debug.Log($"Time: {data.ElapsedTime}s, " +
+                          $"Position: ({data.Rx:F2}, {data.Ry:F2}, {data.Rz:F2}) km, " +
+                          $"Velocity: ({data.Vx:F2}, {data.Vy:F2}, {data.Vz:F2}) km/s, " +
+                          $"Mass: {data.Mass:F2} kg");
+                Vector3 newVector = new Vector3(data.Rx, data.Ry, data.Rz);
+                Instantiate(sphere, newVector, transform.rotation);
+            }
+        }
+        else
+        {
+            Debug.Log("No data available to display.");
+        }
+    }
+}
